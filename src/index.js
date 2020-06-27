@@ -42,11 +42,13 @@ class FaviconCount {
   }
 
   /**
-   * A method to try to get the favicon from any site.
+   * A method to try to get the favicon from any site by looking for a <link />
+   * tag with a rel="shortcut" attribute.
    * @return {DOM Element} the found favicon, or null
    */
   static getFavicon() {
-    return document.getElementById('favicon');
+    return domNodesToArray(document.getElementsByTagName('link'))
+      .find((link) => link.getAttribute('rel').includes('shortcut'));
   }
 
   /**
