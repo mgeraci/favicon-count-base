@@ -32,6 +32,10 @@ class FaviconCount {
     [this.head] = document.getElementsByTagName('head');
   }
 
+  // a cache of canvases created, keyed by the characters rendered (e.g., `1`,
+  // `'99+'`)
+  static drawnCanvases = {}
+
   static getFavicon() {
     return document.getElementById('favicon');
   }
@@ -40,78 +44,77 @@ class FaviconCount {
     // if greater than 99, set to '100+'
     const count = _unread > 99 ? '99+' : _unread;
 
+    // if we have this count cached, run the callback on the cache and short circuit
+    if (this.drawnCanvases[count]) {
+      callback(this.drawnCanvases[count]);
+      return;
+    }
+
     // how many digits the number of unread items is
-    const digits = String(count).length;
+    const numberOfDigits = String(count).length;
 
-    if (!this.textedCanvas) {
-      this.textedCanvas = {};
-    }
+    this.getFaviconCanvas((iconCanvas) => {
+      const characterCanvas = document.createElement('canvas');
+      characterCanvas.height = iconCanvas.width;
+      characterCanvas.width = iconCanvas.width;
+      const ctx = characterCanvas.getContext('2d');
+      ctx.drawImage(iconCanvas, 0, 0);
 
-    if (!this.textedCanvas[count]) {
-      this.getCanvas((iconCanvas) => {
-        const textedCanvas = document.createElement('canvas');
-        textedCanvas.height = iconCanvas.width;
-        textedCanvas.width = iconCanvas.width;
-        const ctx = textedCanvas.getContext('2d');
-        ctx.drawImage(iconCanvas, 0, 0);
+      ctx.strokeStyle = STROKE_STYLE;
+      ctx.fillStyle = FILL_STYLE;
 
-        ctx.strokeStyle = STROKE_STYLE;
-        ctx.fillStyle = FILL_STYLE;
+      // we want the number to be in the lower-right corner, but canvas
+      // takes coordinates from the upper-left. so, we calculate the
+      // upper-left offset with the size of the numbers.
+      const padding = iconCanvas.width * 0.0625; // canvas edge to the number, as a percentage
+      const topMargin = iconCanvas.height - NUMBERS['0'].length - padding; // canvas height from icon top
+      const numbersWidth = NUMBERS['0'][0].length * numberOfDigits + LETTER_SPACING * (numberOfDigits - 1);
+      let leftMargin = iconCanvas.width - numbersWidth - 1;
 
-        // we want the number to be in the lower-right corner, but canvas
-        // takes coordinates from the upper-left. so, we calculate the
-        // upper-left offset with the size of the numbers.
-        const padding = iconCanvas.width * 0.0625; // canvas edge to the number, as a percentage
-        const topMargin = iconCanvas.height - NUMBERS['0'].length - padding; // canvas height from icon top
-        const numbersWidth = NUMBERS['0'][0].length * digits + LETTER_SPACING * (digits - 1);
-        let leftMargin = iconCanvas.width - numbersWidth - 1;
+      if (leftMargin < 0) {
+        leftMargin = 0;
+      }
 
-        if (leftMargin < 0) {
-          leftMargin = 0;
-        }
-
-        // stroke
-        this.drawNumber({
-          digits,
-          count,
-          fn: (x, y) => {
-            ctx.strokeRect(
-              x + leftMargin - LETTER_SIZE,
-              y + topMargin - LETTER_SIZE,
-              LETTER_SIZE * 3,
-              LETTER_SIZE * 3,
-            );
-          },
-        });
-
-        // fill
-        this.drawNumber({
-          digits,
-          count,
-          fn: (x, y) => {
-            ctx.fillRect(
-              x + leftMargin,
-              y + topMargin,
-              LETTER_SIZE,
-              LETTER_SIZE,
-            );
-          },
-        });
-
-        this.textedCanvas[count] = textedCanvas;
-
-        callback(this.textedCanvas[count]);
+      // stroke
+      this.drawCharacters({
+        characters: count,
+        fn: (x, y) => {
+          ctx.strokeRect(
+            x + leftMargin - LETTER_SIZE,
+            y + topMargin - LETTER_SIZE,
+            LETTER_SIZE * 3,
+            LETTER_SIZE * 3,
+          );
+        },
       });
-    }
 
-    if (this.textedCanvas[count]) {
-      callback(this.textedCanvas[count]);
-    }
+      // fill
+      this.drawCharacters({
+        characters: count,
+        fn: (x, y) => {
+          ctx.fillRect(
+            x + leftMargin,
+            y + topMargin,
+            LETTER_SIZE,
+            LETTER_SIZE,
+          );
+        },
+      });
+
+      this.drawnCanvases[count] = characterCanvas;
+
+      callback(characterCanvas);
+    });
   }
 
-  static drawNumber({
-    digits,
-    count,
+  /**
+   * Draw a set of characters.
+   * @param {Object} options - a dictionary of options
+   * @param {number} options.characters - the characters to draw
+   * @param {Function} options.fn - the drawing function (a method on the canvas)
+   */
+  static drawCharacters({
+    characters,
     fn,
   }) {
     let digit;
@@ -120,8 +123,8 @@ class FaviconCount {
     let numberWidth;
     let xOffset = 0;
 
-    range(0, digits).forEach((_, i) => {
-      digit = String(count)[i];
+    range(0, String(characters).length).forEach((_, i) => {
+      digit = String(characters)[i];
 
       if (NUMBERS[digit]) {
         numberMap = NUMBERS[digit];
@@ -140,11 +143,16 @@ class FaviconCount {
     });
   }
 
-  getCanvas(callback) {
-    if (!this.unreadCanvas) {
-      this.unreadCanvas = document.createElement('canvas');
+  /**
+   * Create a canvas element that has the favicon image as a background, and
+   * store the generated canvas on the class to make subsequent calls faster.
+   * @param {function} callback - a function to run with the resulting canvas
+   */
+  getFaviconCanvas(callback) {
+    if (!this.faviconCanvas) {
+      this.faviconCanvas = document.createElement('canvas');
 
-      const ctx = this.unreadCanvas.getContext('2d');
+      const ctx = this.faviconCanvas.getContext('2d');
       const img = new Image();
 
       // allow cross-origin access for the image (since fallbacks may be hosted
@@ -152,38 +160,39 @@ class FaviconCount {
       img.crossOrigin = 'anonymous';
 
       img.addEventListener('load', () => {
-        this.unreadCanvas.width = img.width;
-        this.unreadCanvas.height = img.height;
+        this.faviconCanvas.width = img.width;
+        this.faviconCanvas.height = img.height;
         ctx.drawImage(img, 0, 0);
-        callback(this.unreadCanvas);
+        callback(this.faviconCanvas);
       }, true);
 
       img.src = this.faviconImage;
     } else {
-      callback(this.unreadCanvas);
+      callback(this.faviconCanvas);
     }
   }
 
   /**
-   * Create and set a blank icon.
+   * Create and set an icon with an optional count.
+   * @param {number} [count] - the number to draw on the icon
    */
-  getIcon() {
-    this.getCanvas((canvas) => {
-      this.setIcon(canvas.toDataURL('image/png'));
-    });
+  setIcon(count) {
+    if (count !== null && typeof count !== 'undefined') {
+      this.drawCount(count, (icon) => {
+        this.addIconToDom(icon.toDataURL('image/png'));
+      });
+    } else {
+      this.getFaviconCanvas((canvas) => {
+        this.addIconToDom(canvas.toDataURL('image/png'));
+      });
+    }
   }
 
   /**
-   * Create and set an icon with a count.
-   * @param {number} count - the number to draw on the icon
+   * Add an icon to the dom and make sure it renders.
+   * @param {string} iconHref - the href for the icon
    */
-  getIconWithCount(count = 0) {
-    this.drawCount(count, (icon) => {
-      this.setIcon(icon.toDataURL('image/png'));
-    });
-  }
-
-  setIcon(icon) {
+  addIconToDom(iconHref) {
     const links = this.head.getElementsByTagName('link');
 
     // remove the old icon
@@ -193,13 +202,14 @@ class FaviconCount {
       }
     });
 
+    // add the new icon to the head
     const newIcon = document.createElement('link');
     newIcon.type = 'image/png';
     newIcon.rel = 'shortcut icon';
-    newIcon.href = icon;
+    newIcon.href = iconHref;
     this.head.appendChild(newIcon);
 
-    // Chrome hack for updating the favicon
+    // chrome hack for updating the favicon
     const shim = document.createElement('iframe');
     shim.width = 0;
     shim.height = 0;
