@@ -36,7 +36,7 @@ class FaviconCount {
     return document.getElementById('favicon');
   }
 
-  drawUnreadCount(_unread, callback) {
+  drawCount(_unread, callback) {
     // if greater than 99, set to '100+'
     const count = _unread > 99 ? '99+' : _unread;
 
@@ -140,12 +140,6 @@ class FaviconCount {
     });
   }
 
-  getIcon(callback) {
-    this.getCanvas((canvas) => {
-      callback(canvas.toDataURL('image/png'));
-    });
-  }
-
   getCanvas(callback) {
     if (!this.unreadCanvas) {
       this.unreadCanvas = document.createElement('canvas');
@@ -170,9 +164,22 @@ class FaviconCount {
     }
   }
 
-  getUnreadCountIcon(count, callback) {
-    this.drawUnreadCount(count, (icon) => {
-      callback(icon.toDataURL('image/png'));
+  /**
+   * Create and set a blank icon.
+   */
+  getIcon() {
+    this.getCanvas((canvas) => {
+      this.setIcon(canvas.toDataURL('image/png'));
+    });
+  }
+
+  /**
+   * Create and set an icon with a count.
+   * @param {number} count - the number to draw on the icon
+   */
+  getIconWithCount(count = 0) {
+    this.drawCount(count, (icon) => {
+      this.setIcon(icon.toDataURL('image/png'));
     });
   }
 
