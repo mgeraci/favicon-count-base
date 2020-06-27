@@ -12,23 +12,14 @@ import {
 } from './constants';
 
 class FaviconCount {
-  constructor(options = {}) {
-    if (!options.fallbackIcon) {
-      console.error('FaviconCount must be provided options.fallbackIcon'); // eslint-disable-line no-console
+  constructor() {
+    const favicon = this.getFavicon();
+
+    if (!favicon) {
       return;
     }
 
-    const favicon = this.getFavicon();
-
-    // set to true to force the fallback icon to render
-    const testFallbackIcon = false;
-
-    if (favicon && !testFallbackIcon) {
-      this.faviconImage = favicon.getAttribute('href');
-    } else {
-      this.faviconImage = options.fallbackIcon;
-    }
-
+    this.faviconImage = favicon.getAttribute('href');
     [this.head] = document.getElementsByTagName('head');
   }
 
