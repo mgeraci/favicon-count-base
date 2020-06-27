@@ -32,26 +32,86 @@ class FaviconCount {
     [this.head] = document.getElementsByTagName('head');
   }
 
-  // a cache of canvases created, keyed by the characters rendered (e.g., `1`,
-  // `'99+'`)
-  static drawnCanvases = {}
+  /**
+   * The public method: create and set an icon with an optional count. If a non-
+   * null count is passed, it will render the count on top of the favicon. If
+   * a count is not passed, it will render a blank favicon.
+   * @param {number} [count] - the number to draw on the icon
+   */
+  render(count) {
+    if (count !== null && typeof count !== 'undefined') {
+      this.drawCountOnCanvas(count, (icon) => {
+        this.addIconToDom(icon.toDataURL('image/png'));
+      });
+    } else {
+      this.getFaviconCanvas((canvas) => {
+        this.addIconToDom(canvas.toDataURL('image/png'));
+      });
+    }
+  }
 
+  /**
+   * A method to try to get the favicon from any site.
+   * @return {DOM Element} the found favicon, or null
+   */
   static getFavicon() {
     return document.getElementById('favicon');
   }
 
-  drawCount(_unread, callback) {
-    // if greater than 99, set to '100+'
-    const count = _unread > 99 ? '99+' : _unread;
+  /**
+   * Create a canvas element that has the favicon image as a background, and
+   * store the generated canvas on the class to make subsequent calls faster.
+   * @param {function} callback - a function to run with the resulting canvas
+   */
+  getFaviconCanvas(callback) {
+    if (!this.faviconCanvas) {
+      this.faviconCanvas = document.createElement('canvas');
 
-    // if we have this count cached, run the callback on the cache and short circuit
-    if (this.drawnCanvases[count]) {
-      callback(this.drawnCanvases[count]);
+      const ctx = this.faviconCanvas.getContext('2d');
+      const img = new Image();
+
+      // allow cross-origin access for the image (since fallbacks may be hosted
+      // on domains other than the target domain)
+      img.crossOrigin = 'anonymous';
+
+      img.addEventListener('load', () => {
+        this.faviconCanvas.width = img.width;
+        this.faviconCanvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        callback(this.faviconCanvas);
+      }, true);
+
+      img.src = this.faviconImage;
+    } else {
+      callback(this.faviconCanvas);
+    }
+  }
+
+  /**
+   * The top-level drawing function. This converts a number to a set of
+   * characters to render, retrieves a canvas, renders the characters, and
+   * caches the result for future use.
+   * @param {number} count - the number of items to render as a count
+   * @param {Function} callback - a function to run with the resulting canvas
+   */
+  drawCountOnCanvas(count, callback) {
+    // if greater than 99, set to '100+'
+    const characters = count > 99 ? '99+' : count;
+
+    // create a cache of canvases created, keyed by the characters rendered
+    // (e.g., `1`, `'99+'`), if it does not yet exist
+    if (!this.drawnCanvases) {
+      this.drawnCanvases = {};
+    }
+
+    // if we have this characters cached, run the callback on the cache and short circuit
+    if (this.drawnCanvases[characters]) {
+      callback(this.drawnCanvases[characters]);
       return;
     }
 
     // how many digits the number of unread items is
-    const numberOfDigits = String(count).length;
+    const numberOfDigits = String(characters).length;
 
     this.getFaviconCanvas((iconCanvas) => {
       const characterCanvas = document.createElement('canvas');
@@ -77,7 +137,7 @@ class FaviconCount {
 
       // stroke
       this.drawCharacters({
-        characters: count,
+        characters,
         fn: (x, y) => {
           ctx.strokeRect(
             x + leftMargin - LETTER_SIZE,
@@ -90,7 +150,7 @@ class FaviconCount {
 
       // fill
       this.drawCharacters({
-        characters: count,
+        characters,
         fn: (x, y) => {
           ctx.fillRect(
             x + leftMargin,
@@ -101,7 +161,7 @@ class FaviconCount {
         },
       });
 
-      this.drawnCanvases[count] = characterCanvas;
+      this.drawnCanvases[characters] = characterCanvas;
 
       callback(characterCanvas);
     });
@@ -141,51 +201,6 @@ class FaviconCount {
         });
       }
     });
-  }
-
-  /**
-   * Create a canvas element that has the favicon image as a background, and
-   * store the generated canvas on the class to make subsequent calls faster.
-   * @param {function} callback - a function to run with the resulting canvas
-   */
-  getFaviconCanvas(callback) {
-    if (!this.faviconCanvas) {
-      this.faviconCanvas = document.createElement('canvas');
-
-      const ctx = this.faviconCanvas.getContext('2d');
-      const img = new Image();
-
-      // allow cross-origin access for the image (since fallbacks may be hosted
-      // on domains other than the target domain)
-      img.crossOrigin = 'anonymous';
-
-      img.addEventListener('load', () => {
-        this.faviconCanvas.width = img.width;
-        this.faviconCanvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        callback(this.faviconCanvas);
-      }, true);
-
-      img.src = this.faviconImage;
-    } else {
-      callback(this.faviconCanvas);
-    }
-  }
-
-  /**
-   * Create and set an icon with an optional count.
-   * @param {number} [count] - the number to draw on the icon
-   */
-  setIcon(count) {
-    if (count !== null && typeof count !== 'undefined') {
-      this.drawCount(count, (icon) => {
-        this.addIconToDom(icon.toDataURL('image/png'));
-      });
-    } else {
-      this.getFaviconCanvas((canvas) => {
-        this.addIconToDom(canvas.toDataURL('image/png'));
-      });
-    }
   }
 
   /**
