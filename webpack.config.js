@@ -3,7 +3,11 @@ const path = require('path');
 module.exports = {
   entry: './src/index.js',
   output: {
-    filename: 'main.js',
+    filename: 'FaviconCountBase.js',
+    library: 'FaviconCountBase',
+    libraryTarget: 'umd',
+    globalObject: 'this',
+    umdNamedDefine: true,
     path: path.resolve(__dirname, 'dist'),
   },
   module: {

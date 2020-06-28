@@ -1,6 +1,7 @@
 /* global document, Image */
 
 import range from './range';
+import domNodesToArray from './domNodesToArray';
 
 import {
   FILL_STYLE,

@@ -6,5 +6,5 @@
  * @returns {array} - an array
  */
 export default function (nodes) {
-	return [].slice.call(nodes);
+  return [].slice.call(nodes);
 }
