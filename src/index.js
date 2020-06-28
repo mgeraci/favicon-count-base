@@ -47,7 +47,7 @@ class FaviconCount {
    * tag with a rel="shortcut" attribute.
    * @return {DOM Element} the found favicon, or null
    */
-  static getFavicon() {
+  getFavicon() {
     return domNodesToArray(document.getElementsByTagName('link'))
       .find((link) => link.getAttribute('rel').includes('shortcut'));
   }
@@ -167,7 +167,7 @@ class FaviconCount {
    * @param {number} options.characters - the characters to draw
    * @param {Function} options.fn - the drawing function (a method on the canvas)
    */
-  static drawCharacters({
+  drawCharacters({
     characters,
     fn,
   }) {
