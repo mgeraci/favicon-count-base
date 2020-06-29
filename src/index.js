@@ -45,7 +45,8 @@ class FaviconCount {
 
   /**
    * A method to try to get the favicon from any site by looking for a <link />
-   * tag with a rel="shortcut" attribute.
+   * tag with a rel="shortcut" attribute. Prefer size 32, otherwise sort by
+   * largest to smallest
    * @return {DomElement} the found favicon, or null
    */
   getFavicon() {
@@ -58,6 +59,15 @@ class FaviconCount {
         const sizeB = b.getAttribute('sizes')
           ? parseInt(b.getAttribute('sizes').split('x')[0], 10)
           : 0;
+
+        if (sizeA === 32) {
+          return -1;
+        }
+
+        if (sizeB === 32) {
+          return 1;
+        }
+
         return sizeB - sizeA;
       });
 
