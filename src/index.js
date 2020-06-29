@@ -4,6 +4,7 @@ import range from './range';
 import domNodesToArray from './domNodesToArray';
 
 import {
+  CANVAS_SIZE,
   FILL_STYLE,
   STROKE_STYLE,
   LETTER_SIZE,
@@ -71,6 +72,8 @@ class FaviconCount {
   getFaviconCanvas(callback) {
     if (!this.faviconCanvas) {
       this.faviconCanvas = document.createElement('canvas');
+      this.faviconCanvas.width = CANVAS_SIZE;
+      this.faviconCanvas.height = CANVAS_SIZE;
 
       const ctx = this.faviconCanvas.getContext('2d');
       const img = new Image();
@@ -80,9 +83,7 @@ class FaviconCount {
       img.crossOrigin = 'anonymous';
 
       img.addEventListener('load', () => {
-        this.faviconCanvas.width = img.width;
-        this.faviconCanvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
         callback(this.faviconCanvas);
       }, true);
 
