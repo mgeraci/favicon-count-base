@@ -45,11 +45,22 @@ class FaviconCount {
   /**
    * A method to try to get the favicon from any site by looking for a <link />
    * tag with a rel="shortcut" attribute.
-   * @return {DOM Element} the found favicon, or null
+   * @return {DomElement} the found favicon, or null
    */
   getFavicon() {
-    return domNodesToArray(document.getElementsByTagName('link'))
-      .find((link) => link.getAttribute('rel').includes('shortcut'));
+    const icons = domNodesToArray(document.getElementsByTagName('link'))
+      .filter((link) => link.getAttribute('rel').includes('icon'))
+      .sort((a, b) => {
+        const sizeA = a.getAttribute('sizes')
+          ? parseInt(a.getAttribute('sizes').split('x')[0], 10)
+          : 0;
+        const sizeB = b.getAttribute('sizes')
+          ? parseInt(b.getAttribute('sizes').split('x')[0], 10)
+          : 0;
+        return sizeB - sizeA;
+      });
+
+    return icons[0];
   }
 
   /**
