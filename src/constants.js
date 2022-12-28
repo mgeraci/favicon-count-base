@@ -1,6 +1,8 @@
 export const CANVAS_SIZE = 32;
-export const FILL_STYLE = '#000';
-export const STROKE_STYLE = 'rgba(255, 255, 255, 0.6)';
+export const LIGHT_MODE_FG = '#000';
+export const LIGHT_MODE_BG = 'rgba(255, 255, 255, 0.6)';
+export const DARK_MODE_FG = '#FFF';
+export const DARK_MODE_BG = 'rgba(0, 0, 0, 0.6)';
 export const LETTER_SIZE = 2;
 export const LETTER_SPACING = 2;
 

@@ -14,6 +14,11 @@ It is used in extensions for the following sites:
 	[chrome extension](https://chrome.google.com/webstore/detail/newsblur-favicon-count/aljiepkbclfgfjnmlaehmfjcjeigkeag),
 	and [firefox extension](https://addons.mozilla.org/en-US/firefox/addon/newsblur-favicon-count/)
 
+## Compilation
+After cloning the repo and installing its packages, you can:
+* `yarn watch` to look for changes and compile
+* `yarn build` to do a production build to the `dist` folder
+
 ## API
 
 The compiled package is available at `dist/main.js` (the source can be found at

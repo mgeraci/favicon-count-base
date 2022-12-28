@@ -5,8 +5,10 @@ import domNodesToArray from './domNodesToArray';
 
 import {
   CANVAS_SIZE,
-  FILL_STYLE,
-  STROKE_STYLE,
+  LIGHT_MODE_FG,
+  LIGHT_MODE_BG,
+  DARK_MODE_FG,
+  DARK_MODE_BG,
   LETTER_SIZE,
   LETTER_SPACING,
 
@@ -136,8 +138,13 @@ class FaviconCount {
       const ctx = characterCanvas.getContext('2d');
       ctx.drawImage(iconCanvas, 0, 0);
 
-      ctx.strokeStyle = STROKE_STYLE;
-      ctx.fillStyle = FILL_STYLE;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        ctx.strokeStyle = DARK_MODE_BG;
+        ctx.fillStyle = DARK_MODE_FG;
+      } else {
+        ctx.strokeStyle = LIGHT_MODE_BG;
+        ctx.fillStyle = LIGHT_MODE_FG;
+      }
 
       // we want the number to be in the lower-right corner, but canvas
       // takes coordinates from the upper-left. so, we calculate the
