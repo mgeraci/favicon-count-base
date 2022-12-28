@@ -1,4 +1,4 @@
-/* global document, Image */
+/* global document, Image, window */
 
 import range from './range';
 import domNodesToArray from './domNodesToArray';
