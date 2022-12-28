@@ -138,6 +138,8 @@ class FaviconCount {
       const ctx = characterCanvas.getContext('2d');
       ctx.drawImage(iconCanvas, 0, 0);
 
+      console.log(window.matchMedia('(prefers-color-scheme: dark)'));
+
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         ctx.strokeStyle = DARK_MODE_BG;
         ctx.fillStyle = DARK_MODE_FG;
